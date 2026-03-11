@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIUC-1 Evidence Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07090f; --surface:#0d1017; --surface2:#131720; --surface3:#1a1f2e;
+  --border:#1e2535; --border2:#252d40;
+  --accent:#4fffb0; --accent2:#6c8dff;
+  --text:#dde3f0; --text2:#8892a8; --muted:#404858;
+  --A:#3b82f6; --B:#a855f7; --C:#ec4899; --D:#f59e0b; --E:#10b981; --F:#06b6d4;
+  --success:#4fffb0; --warn:#f59e0b; --danger:#ff4d6a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,255,176,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(79,255,176,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+.layout{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* Sidebar */
+.sidebar{width:230px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
+.logo-area{padding:22px 18px 18px;border-bottom:1px solid var(--border)}
+.logo-pill{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(120deg,var(--accent2),var(--accent));border-radius:6px;padding:5px 10px;margin-bottom:10px}
+.logo-pill span{font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000;letter-spacing:.08em}
+.logo-sub{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;line-height:1.6}
+.nav{flex:1;padding:12px 0}
+.nav-section{font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;padding:12px 18px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:11px;color:var(--text2);cursor:pointer;transition:all .15s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(79,255,176,.07)}
+.nav-icon{font-size:14px;width:18px;text-align:center}
+.sidebar-footer{padding:14px 18px;border-top:1px solid var(--border)}
+.conn-status{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text2)}
+.dot{width:6px;height:6px;border-radius:50%}
+.dot.green{background:var(--success);box-shadow:0 0 8px var(--success);animation:blink 2s infinite}
+.dot.grey{background:var(--muted)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.badge-count{min-width:18px;height:18px;border-radius:9px;background:var(--danger);color:#fff;font-size:9px;display:inline-flex;align-items:center;justify-content:center;margin-left:6px}
+
+/* Main */
+.main{margin-left:230px;flex:1}
+.topbar{padding:18px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:50}
+.topbar-left h1{font-family:'Syne',sans-serif;font-weight:700;font-size:17px}
+.topbar-left h1 span{color:var(--accent)}
+.topbar-left p{font-size:10px;color:var(--text2);margin-top:2px}
+.topbar-right{display:flex;gap:10px;align-items:center}
+.btn{padding:8px 16px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;border:none;display:flex;align-items:center;gap:6px}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--accent2)}
+.btn-primary{background:var(--accent);color:#000;font-weight:500}
+.btn-primary:hover{background:#3de89a}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Pages */
+.page{display:none;padding:32px}
+.page.active{display:block}
+.page-header{margin-bottom:28px}
+.page-header h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px}
+.page-header p{font-size:11px;color:var(--text2)}
+
+/* Connect */
+.connect-hero{max-width:660px;margin:0 auto;text-align:center;padding:40px 0 28px}
+.connect-hero h2{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;margin-bottom:12px}
+.connect-hero h2 em{color:var(--accent);font-style:normal}
+.connect-hero p{font-size:12px;color:var(--text2);line-height:1.8}
+.connect-card{max-width:580px;margin:24px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px}
+.field-group{margin-bottom:18px}
+.field-label{font-size:10px;color:var(--text2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.field-row{display:flex;gap:8px}
+.field-input{flex:1;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;transition:border-color .15s}
+.field-input:focus{border-color:var(--accent2)}
+.field-hint{font-size:10px;color:var(--muted);margin-top:4px}
+.demo-banner{background:rgba(79,255,176,.07);border:1px solid rgba(79,255,176,.2);border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:11px;color:var(--accent);display:flex;align-items:center;gap:8px}
+.real-banner{background:rgba(108,141,255,.07);border:1px solid rgba(108,141,255,.2);border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:11px;color:var(--accent2);display:flex;align-items:flex-start;gap:8px;line-height:1.7}
+.source-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tag{padding:3px 10px;border-radius:20px;font-size:10px;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);cursor:pointer;transition:all .15s}
+.tag:hover{border-color:var(--text2);color:var(--text)}
+.tag.active-tag{background:rgba(79,255,176,.12);border-color:var(--accent);color:var(--accent)}
+.mode-toggle{display:flex;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;margin-bottom:20px}
+.mode-btn{flex:1;padding:10px;text-align:center;font-size:11px;cursor:pointer;transition:all .15s;color:var(--text2)}
+.mode-btn.active{background:var(--accent);color:#000;font-weight:600}
+.mode-btn:not(.active):hover{background:var(--surface3)}
+
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.stat-label{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.stat-val{font-family:'Syne',sans-serif;font-weight:700;font-size:28px}
+.stat-val.green{color:var(--success)} .stat-val.yellow{color:var(--warn)} .stat-val.blue{color:var(--accent2)}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.domains-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.domain-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;position:relative;overflow:hidden}
+.domain-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.domain-card.A::before{background:var(--A)} .domain-card.B::before{background:var(--B)}
+.domain-card.C::before{background:var(--C)} .domain-card.D::before{background:var(--D)}
+.domain-card.E::before{background:var(--E)} .domain-card.F::before{background:var(--F)}
+.domain-letter{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#000;margin-bottom:10px}
+.domain-card.A .domain-letter{background:var(--A)} .domain-card.B .domain-letter{background:var(--B)}
+.domain-card.C .domain-letter{background:var(--C)} .domain-card.D .domain-letter{background:var(--D)}
+.domain-card.E .domain-letter{background:var(--E)} .domain-card.F .domain-letter{background:var(--F)}
+.domain-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:4px}
+.domain-desc{font-size:10px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.progress-bar{height:4px;background:var(--surface3);border-radius:2px;margin-bottom:6px}
+.progress-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.domain-card.A .progress-fill{background:var(--A)} .domain-card.B .progress-fill{background:var(--B)}
+.domain-card.C .progress-fill{background:var(--C)} .domain-card.D .progress-fill{background:var(--D)}
+.domain-card.E .progress-fill{background:var(--E)} .domain-card.F .progress-fill{background:var(--F)}
+.domain-score-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text2)}
+
+/* Evidence */
+.ev-list{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ev-list-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ev-list-header h3{font-family:'Syne',sans-serif;font-size:13px;font-weight:600}
+.ev-row{display:grid;grid-template-columns:36px 1fr 160px 90px 90px;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid var(--border);font-size:11px;transition:background .1s}
+.ev-row:last-child{border-bottom:none}
+.ev-row:hover{background:var(--surface2)}
+.ev-badge{width:26px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#000}
+.ev-source{color:var(--text2);font-size:10px}
+.status-pill{padding:2px 8px;border-radius:10px;font-size:9px;letter-spacing:.05em}
+.pill-ok{background:rgba(79,255,176,.12);color:var(--success);border:1px solid rgba(79,255,176,.25)}
+.pill-warn{background:rgba(245,158,11,.12);color:var(--warn);border:1px solid rgba(245,158,11,.25)}
+.pill-gap{background:rgba(255,77,106,.12);color:var(--danger);border:1px solid rgba(255,77,106,.25)}
+.pill-real{background:rgba(108,141,255,.12);color:var(--accent2);border:1px solid rgba(108,141,255,.25)}
+.ev-link{color:var(--accent2);font-size:10px;cursor:pointer;text-decoration:none}
+.ev-link:hover{text-decoration:underline}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.chip.ok{background:rgba(79,255,176,.08);border-color:rgba(79,255,176,.2);color:var(--success)}
+
+/* Gaps */
+.gap-section{margin-bottom:24px}
+.section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px}
+.gap-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.gap-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px}
+.gap-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.gap-title{font-size:12px;font-weight:500}
+.gap-priority{font-size:9px;padding:2px 8px;border-radius:10px}
+.prio-high{background:rgba(255,77,106,.12);color:var(--danger);border:1px solid rgba(255,77,106,.2)}
+.prio-med{background:rgba(245,158,11,.12);color:var(--warn);border:1px solid rgba(245,158,11,.2)}
+.gap-desc{font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:12px}
+.gap-fix{font-size:10px;color:var(--accent)}
+
+/* Checklist */
+.cl-table{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cl-header{display:grid;grid-template-columns:60px 1fr 140px 80px;gap:16px;padding:10px 20px;background:var(--surface2);font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.cl-row{display:grid;grid-template-columns:60px 1fr 140px 80px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);font-size:11px;align-items:center}
+.cl-row:last-child{border-bottom:none}
+.cl-row:hover{background:var(--surface2)}
+.ctrl-id{font-size:10px;color:var(--muted)}
+.ctrl-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0}
+.ctrl-check.checked{background:var(--success);border-color:var(--success)}
+.ctrl-check.checked::after{content:'✓';font-size:11px;color:#000;font-weight:700}
+.ctrl-name-wrap{display:flex;align-items:center;gap:10px}
+
+/* Export */
+.export-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.export-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:10px}
+.export-card:hover{border-color:var(--accent2);transform:translateY(-2px)}
+.export-icon{font-size:26px}
+.export-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600}
+.export-desc{font-size:11px;color:var(--text2);line-height:1.6}
+.export-badge{font-size:9px;color:var(--accent);margin-top:4px}
+
+/* Scanner */
+.scanner-overlay{position:fixed;inset:0;background:rgba(7,9,15,.93);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+.scanner-overlay.show{opacity:1;pointer-events:all}
+.scanner-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px 36px;width:500px}
+.scanner-box h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:6px;text-align:center}
+.scanner-box .sub{font-size:11px;color:var(--text2);text-align:center;margin-bottom:20px}
+.scan-progress{background:var(--surface2);border-radius:6px;height:6px;margin-bottom:16px;overflow:hidden}
+.scan-bar{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:6px;width:0%;transition:width .4s ease}
+.scan-steps{font-size:11px}
+.scan-step{padding:5px 0;color:var(--muted);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.scan-step.done{color:var(--success)}
+.scan-step.active{color:var(--text)}
+.scan-step.error-step{color:var(--danger)}
+.step-icon{width:16px;flex-shrink:0;font-size:12px}
+.scan-anim{position:relative;overflow:hidden;background:var(--surface3);border-radius:8px;height:56px;margin-bottom:18px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text2)}
+@keyframes scanline{0%{transform:translateY(-200%)}100%{transform:translateY(400%)}}
+.scan-anim::after{content:'';position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanline 1.4s linear infinite}
+.scan-mode-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:10px;margin-bottom:16px;width:100%;justify-content:center}
+.scan-mode-badge.real{background:rgba(108,141,255,.12);border:1px solid rgba(108,141,255,.25);color:var(--accent2)}
+.scan-mode-badge.demo{background:rgba(79,255,176,.08);border:1px solid rgba(79,255,176,.2);color:var(--accent)}
+
+/* Real data indicator */
+.real-tag{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:10px;font-size:9px;background:rgba(108,141,255,.12);border:1px solid rgba(108,141,255,.25);color:var(--accent2);margin-left:6px}
+.demo-tag{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:10px;font-size:9px;background:rgba(79,255,176,.08);border:1px solid rgba(79,255,176,.2);color:var(--accent)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 18px;font-size:11px;color:var(--text);transform:translateY(80px);opacity:0;transition:all .3s;z-index:300;max-width:400px;line-height:1.6}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* Error box */
+.error-box{background:rgba(255,77,106,.07);border:1px solid rgba(255,77,106,.2);border-radius:8px;padding:12px 16px;font-size:11px;color:var(--danger);line-height:1.7;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo-area">
+    <div class="logo-pill"><span>AIUC-1</span></div>
+    <div class="logo-sub">Evidence &amp; Governance Hub<br>v2.0 · Real + Demo Mode</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item active" onclick="nav('connect')" id="nav-connect"><span class="nav-icon">⚡</span> Connect Source</div>
+    <div class="nav-item" onclick="nav('dashboard')" id="nav-dashboard"><span class="nav-icon">◈</span> Dashboard</div>
+    <div class="nav-section">Evidence</div>
+    <div class="nav-item" onclick="nav('evidence')" id="nav-evidence"><span class="nav-icon">📁</span> Evidence Library</div>
+    <div class="nav-item" onclick="nav('gaps')" id="nav-gaps"><span class="nav-icon">⚠</span> Gap Analysis <span class="badge-count" id="gap-badge" style="display:none">0</span></div>
+    <div class="nav-item" onclick="nav('checklist')" id="nav-checklist"><span class="nav-icon">☑</span> Checklist</div>
+    <div class="nav-section">Output</div>
+    <div class="nav-item" onclick="nav('export')" id="nav-export"><span class="nav-icon">↗</span> Export Package</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="conn-status">
+      <div class="dot grey" id="conn-dot"></div>
+      <span id="conn-label">Not connected</span>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:5px" id="conn-source"></div>
+    <div style="margin-top:8px" id="conn-mode-badge"></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>AI Hub <span>Governance</span></h1>
+      <p id="topbar-sub">Connect a source to begin evidence collection</p>
+    </div>
+    <div class="topbar-right">
+      <span id="mode-indicator" style="font-size:10px;color:var(--muted)"></span>
+      <button class="btn btn-ghost" onclick="nav('export')" id="btn-export" disabled>↗ Export</button>
+      <button class="btn btn-primary" onclick="triggerScan()" id="btn-scan" disabled>⟳ Re-scan</button>
+    </div>
+  </div>
+
+  <!-- CONNECT PAGE -->
+  <div class="page active" id="page-connect">
+    <div class="connect-hero">
+      <h2>Connect your <em>AI Hub</em> source</h2>
+      <p>Choose a GitHub repo to scan for real evidence, or load the STC Framework demo to see the app in action.</p>
+    </div>
+    <div class="connect-card">
+      <div class="field-group">
+        <div class="field-label">Scan Mode</div>
+        <div class="mode-toggle">
+          <div class="mode-btn active" id="mode-btn-real" onclick="setMode('real')">🔍 Real GitHub Scan</div>
+          <div class="mode-btn" id="mode-btn-demo" onclick="setMode('demo')">🧪 Demo Mode (STC Framework)</div>
+        </div>
+      </div>
+
+      <!-- Real mode UI -->
+      <div id="real-mode-ui">
+        <div class="real-banner">
+          ⚡ <span>Calls the <strong>GitHub API</strong> in your browser — checks real file paths, folder structure, and commit history against AIUC-1 controls. No token needed for public repos.</span>
+        </div>
+        <div class="field-group">
+          <div class="field-label">GitHub Repo (owner/repo)</div>
+          <div class="field-row">
+            <input class="field-input" id="repo-input" placeholder="e.g. nitesh71078/stc-framework" value="nitesh71078/stc-framework">
+            <button class="btn btn-primary" onclick="triggerScan()" style="white-space:nowrap">⟳ Scan Repo</button>
+          </div>
+          <div class="field-hint">Public repos only (no token required). For private repos, enter a Personal Access Token below.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">GitHub Token (optional, for private repos)</div>
+          <input class="field-input" id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx — stored only in memory, never sent anywhere except GitHub API">
+          <div class="field-hint">Your token is used only in your browser to call api.github.com — it is never stored or transmitted elsewhere.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Agent / System Name</div>
+          <input class="field-input" id="agent-name-input" placeholder="e.g. My AI Hub — Production Agent">
+        </div>
+      </div>
+
+      <!-- Demo mode UI -->
+      <div id="demo-mode-ui" style="display:none">
+        <div class="demo-banner">✦ Demo Mode — STC Framework pre-loaded. Evidence is illustrative, clearly labelled as demo data.</div>
+        <div class="field-group">
+          <div class="field-label">Source</div>
+          <input class="field-input" value="https://nitesh71078.github.io/stc-framework/" readonly>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Agent / System Name</div>
+          <input class="field-input" value="STC Framework — AI Hub Demo" readonly>
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-top:4px">
+        <div class="field-label">AIUC-1 Domains</div>
+        <div class="source-tags">
+          <div class="tag active-tag">A · Data &amp; Privacy</div>
+          <div class="tag active-tag">B · Security</div>
+          <div class="tag active-tag">C · Safety</div>
+          <div class="tag active-tag">D · Reliability</div>
+          <div class="tag active-tag">E · Accountability</div>
+          <div class="tag active-tag">F · Society</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;margin-top:4px" onclick="triggerScan()">⟳ Start Scan</button>
+      <div id="connect-error" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page" id="page-dashboard">
+    <div class="page-header">
+      <h2>Compliance Dashboard <span id="dash-mode-badge"></span></h2>
+      <p>AIUC-1 coverage for <strong id="dash-agent-name">—</strong></p>
+    </div>
+    <div class="dash-grid">
+      <div class="stat-card"><div class="stat-label">Overall Score</div><div class="stat-val green" id="stat-score">—</div><div class="stat-sub">Across 6 domains</div></div>
+      <div class="stat-card"><div class="stat-label">Evidence Found</div><div class="stat-val blue" id="stat-evidence">—</div><div class="stat-sub" id="stat-ev-sub">—</div></div>
+      <div class="stat-card"><div class="stat-label">Gaps Found</div><div class="stat-val yellow" id="stat-gaps">—</div><div class="stat-sub">Controls need attention</div></div>
+      <div class="stat-card"><div class="stat-label">Last Scanned</div><div class="stat-val" style="font-size:18px" id="stat-time">—</div><div class="stat-sub" id="stat-date">—</div></div>
+    </div>
+    <div class="domains-grid" id="domains-grid"></div>
+    <div class="ev-list">
+      <div class="ev-list-header">
+        <h3>Recent Evidence</h3>
+        <button class="btn btn-ghost" onclick="nav('evidence')" style="padding:5px 12px;font-size:10px">View All →</button>
+      </div>
+      <div class="ev-row" style="background:var(--surface2);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:8px 20px">
+        <div>Domain</div><div>Control / Artifact</div><div>Path Found</div><div>Status</div><div>Link</div>
+      </div>
+      <div id="recent-ev"></div>
+    </div>
+  </div>
+
+  <!-- EVIDENCE LIBRARY -->
+  <div class="page" id="page-evidence">
+    <div class="page-header"><h2>Evidence Library <span id="ev-mode-badge"></span></h2><p>All controls mapped to AIUC-1 — with real file paths from GitHub</p></div>
+    <div class="ev-list">
+      <div class="ev-list-header">
+        <h3>All Evidence Items</h3>
+        <div style="display:flex;gap:8px">
+          <span class="chip ok" id="ev-count-ok">—</span>
+          <span class="chip" style="color:var(--warn);border-color:rgba(245,158,11,.3)" id="ev-count-warn">—</span>
+          <span class="chip" style="color:var(--danger);border-color:rgba(255,77,106,.3)" id="ev-count-gap">—</span>
+        </div>
+      </div>
+      <div class="ev-row" style="background:var(--surface2);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:8px 20px">
+        <div>Domain</div><div>Control / Artifact</div><div>Path Found</div><div>Status</div><div>Link</div>
+      </div>
+      <div id="all-ev"></div>
+    </div>
+  </div>
+
+  <!-- GAP ANALYSIS -->
+  <div class="page" id="page-gaps">
+    <div class="page-header"><h2>Gap Analysis <span id="gap-mode-badge"></span></h2><p>Controls with missing or partial evidence — prioritised by risk</p></div>
+    <div class="gap-section">
+      <div class="section-title">🔴 High Priority <span style="font-size:11px;color:var(--text2);font-weight:400">— Address before audit</span></div>
+      <div class="gap-cards" id="gaps-high"><div style="color:var(--muted);font-size:11px;padding:16px">No high priority gaps found.</div></div>
+    </div>
+    <div class="gap-section">
+      <div class="section-title">🟡 Medium Priority <span style="font-size:11px;color:var(--text2);font-weight:400">— Address before deployment</span></div>
+      <div class="gap-cards" id="gaps-med"><div style="color:var(--muted);font-size:11px;padding:16px">No medium priority gaps found.</div></div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="page" id="page-checklist">
+    <div class="page-header"><h2>AIUC-1 Checklist</h2><p>Mark controls as verified — exported with your evidence package</p></div>
+    <div class="cl-table">
+      <div class="cl-header"><div>Control</div><div>Requirement</div><div>Evidence</div><div>Verified</div></div>
+      <div id="cl-rows"></div>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="page" id="page-export">
+    <div class="page-header"><h2>Export Evidence Package</h2><p>Audit-ready deliverables for governance &amp; compliance review</p></div>
+    <div class="export-grid">
+      <div class="export-card" onclick="exportJSON()">
+        <div class="export-icon">📄</div>
+        <div class="export-title">Evidence Package (JSON)</div>
+        <div class="export-desc">Full machine-readable record — all controls, scores, real file paths, and metadata.</div>
+        <div class="export-badge">✦ Recommended for auditors</div>
+      </div>
+      <div class="export-card" onclick="exportCSV()">
+        <div class="export-icon">☑</div>
+        <div class="export-title">Checklist (CSV)</div>
+        <div class="export-desc">All AIUC-1 controls with coverage status and GitHub paths — import into Excel or Sheets.</div>
+        <div class="export-badge">✦ Great for stakeholder review</div>
+      </div>
+      <div class="export-card" onclick="exportMD()">
+        <div class="export-icon">⚠</div>
+        <div class="export-title">Gap Report (Markdown)</div>
+        <div class="export-desc">Prioritised gaps with remediation guidance for engineering teams.</div>
+        <div class="export-badge">✦ Great for engineering teams</div>
+      </div>
+    </div>
+    <div class="ev-list">
+      <div class="ev-list-header"><h3>Package Summary</h3><span class="chip ok" id="export-ready-chip">Run a scan first</span></div>
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:11px">
+        <div>
+          <div style="color:var(--muted);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Contents</div>
+          <div id="export-summary" style="line-height:2.4;color:var(--text2)">—</div>
+        </div>
+        <div>
+          <div style="color:var(--muted);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Domain Scores</div>
+          <div id="export-snapshot" style="line-height:2.4;color:var(--text2)">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- Scanner -->
+<div class="scanner-overlay" id="scanner">
+  <div class="scanner-box">
+    <div class="scan-anim" id="scan-anim-label">Initialising scan…</div>
+    <div class="scan-mode-badge real" id="scan-mode-badge">⚡ Real GitHub API Scan</div>
+    <h3>Collecting Evidence</h3>
+    <p class="sub" id="scan-sub">Checking file paths against AIUC-1 controls…</p>
+    <div class="scan-progress"><div class="scan-bar" id="scan-bar"></div></div>
+    <div class="scan-steps" id="scan-steps"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Domain definitions ───────────────────────────────────────────────────
+const DOMAINS = [
+  { id:'A', name:'Data & Privacy',   desc:'Customer data policies, PII protection, access controls, data leakage safeguards.', color:'var(--A)' },
+  { id:'B', name:'Security',         desc:'Runtime firewall, injection detection, auth/RBAC, model provenance, pen testing.', color:'var(--B)' },
+  { id:'C', name:'Safety',           desc:'Guardrails, hallucination controls, harmful output prevention, adversarial testing.', color:'var(--C)' },
+  { id:'D', name:'Reliability',      desc:'System architecture, declarative spec, test coverage, SLA commitments.', color:'var(--D)' },
+  { id:'E', name:'Accountability',   desc:'Audit trails, lineage tracking, human oversight, escalation paths, versioning.', color:'var(--E)' },
+  { id:'F', name:'Society',          desc:'Bias mitigation, fairness testing, regulatory compliance (FINRA, NYDFS, EU AI Act).', color:'var(--F)' },
+];
+
+// ─── AIUC-1 control → GitHub path mappings ───────────────────────────────
+// Each control has candidate paths to check + keywords to look for in README/docs
+const CONTROL_MAP = [
+  { id:'A.1', domain:'A', control:'Data handling / privacy policy', paths:['docs/data-privacy-policy.md','docs/privacy.md','docs/data-policy.md','PRIVACY.md'], keywords:['pii','privacy','data policy','data handling'], priority:'high' },
+  { id:'A.2', domain:'A', control:'PII detection tool', paths:['sentinel/presidio_guard.py','sentinel/pii.py','security/pii.py','sentinel/data_security.py'], keywords:['presidio','pii detection','data redaction'], priority:'high' },
+  { id:'A.3', domain:'A', control:'Data retention schedule', paths:['docs/data-retention.md','docs/retention-policy.md','governance/data-retention.md'], keywords:['retention','deletion schedule','data lifecycle'], priority:'high' },
+  { id:'A.4', domain:'A', control:'Third-party data sharing policy', paths:['docs/third-party.md','docs/vendors.md','governance/third-party-policy.md'], keywords:['third party','vendor','data sharing'], priority:'med' },
+  { id:'B.1', domain:'B', control:'Runtime firewall / injection defence', paths:['sentinel/llama_firewall.py','security/firewall.py','sentinel/firewall.py','sentinel/injection.py'], keywords:['llamafirewall','firewall','injection'], priority:'high' },
+  { id:'B.2', domain:'B', control:'Auth & RBAC', paths:['sentinel/casbin_auth.py','security/auth.py','sentinel/auth.py','infrastructure/auth.py'], keywords:['casbin','rbac','auth','jwt'], priority:'high' },
+  { id:'B.3', domain:'B', control:'Model provenance verification', paths:['sentinel/sha256_verify.py','security/provenance.py','sentinel/provenance.py'], keywords:['sha256','provenance','model hash'], priority:'med' },
+  { id:'B.4', domain:'B', control:'Secrets management', paths:['docs/secrets.md','.env.example','infrastructure/secrets.md','governance/secrets-policy.md'], keywords:['secrets','vault','api key management'], priority:'high' },
+  { id:'B.5', domain:'B', control:'Adversarial / pen test results', paths:['adversarial/','adversarial/README.md','security/pen-tests/','tests/adversarial/'], keywords:['adversarial','pen test','garak','red team'], priority:'med' },
+  { id:'C.1', domain:'C', control:'Output guardrails', paths:['critic/nemo_guardrails.py','critic/guardrails.py','critic/critic_agent.py','security/guardrails.py'], keywords:['guardrails','nemo','output validation'], priority:'high' },
+  { id:'C.2', domain:'C', control:'Prompt injection defence', paths:['sentinel/llama_firewall.py','security/injection.py','sentinel/injection_defence.py'], keywords:['injection','llamafirewall','prompt defence'], priority:'high' },
+  { id:'C.3', domain:'C', control:'Hallucination mitigation', paths:['critic/hallucination.py','critic/critic_agent.py','tests/hallucination/'], keywords:['hallucination','fact check','grounding'], priority:'med' },
+  { id:'C.4', domain:'C', control:'Incident response plan', paths:['docs/incident-response.md','governance/incident-response.md','operational/incident-response.md'], keywords:['incident','escalation','safety plan'], priority:'high' },
+  { id:'D.1', domain:'D', control:'System architecture docs', paths:['docs/architecture/README.md','docs/architecture.md','README.md'], keywords:['architecture','system design','components'], priority:'high' },
+  { id:'D.2', domain:'D', control:'Declarative specification (YAML/config)', paths:['spec/stc-spec.yaml','spec/README.md','spec/agent-spec.yaml','config/spec.yaml'], keywords:['declarative','yaml','specification','contract'], priority:'high' },
+  { id:'D.3', domain:'D', control:'SLA / uptime commitment', paths:['docs/sla.md','governance/sla.md','operational/sla.md','docs/reliability.md'], keywords:['sla','uptime','availability','latency slo'], priority:'med' },
+  { id:'D.4', domain:'D', control:'Test suite', paths:['tests/','tests/README.md','reference-impl/evaluation/'], keywords:['test','evaluation','coverage'], priority:'med' },
+  { id:'E.1', domain:'E', control:'Audit trail / trace logging', paths:['stalwart/trace_logger.py','observability/','observability/README.md','observability/audit.py'], keywords:['audit','trace','logging','lineage'], priority:'high' },
+  { id:'E.2', domain:'E', control:'Human oversight / escalation path', paths:['critic/escalation.py','governance/escalation.md','operational/escalation.md'], keywords:['escalation','human oversight','human in the loop'], priority:'high' },
+  { id:'E.3', domain:'E', control:'Model / spec versioning', paths:['spec/stc-spec.yaml','CHANGELOG.md','docs/versioning.md'], keywords:['versioning','changelog','version control'], priority:'med' },
+  { id:'E.4', domain:'E', control:'AIUC-1 crosswalk document', paths:['docs/aiuc-1-crosswalk/README.md','docs/aiuc-1-crosswalk.md','governance/aiuc-1.md'], keywords:['aiuc-1','crosswalk','compliance mapping'], priority:'med' },
+  { id:'F.1', domain:'F', control:'Regulatory compliance (FINRA/NYDFS)', paths:['regulation/','regulation/README.md','docs/regulatory/','docs/finra.md'], keywords:['finra','nydfs','regulatory','compliance'], priority:'high' },
+  { id:'F.2', domain:'F', control:'EU AI Act alignment', paths:['docs/aiuc-1-crosswalk/README.md','docs/eu-ai-act.md','governance/eu-ai-act.md'], keywords:['eu ai act','eu ai','european ai'], priority:'med' },
+  { id:'F.3', domain:'F', control:'Bias & fairness testing', paths:['tests/fairness/','docs/fairness.md','risk/bias.md','risk/'], keywords:['bias','fairness','demographic','fairlearn'], priority:'high' },
+  { id:'F.4', domain:'F', control:'Transparency / explainability', paths:['docs/explainability.md','governance/transparency.md','docs/transparency.md'], keywords:['explainability','transparency','interpretability'], priority:'med' },
+];
+
+// ─── State ────────────────────────────────────────────────────────────────
+const state = {
+  mode: 'real',          // 'real' | 'demo'
+  scanned: false,
+  repo: '',
+  token: '',
+  agentName: '',
+  evidence: [],          // populated after scan
+  gaps: [],
+  checked: new Set(),
+  repoData: null,        // raw GitHub API data
+};
+
+// ─── Mode toggle ──────────────────────────────────────────────────────────
+function setMode(m) {
+  state.mode = m;
+  document.getElementById('mode-btn-real').classList.toggle('active', m==='real');
+  document.getElementById('mode-btn-demo').classList.toggle('active', m==='demo');
+  document.getElementById('real-mode-ui').style.display = m==='real' ? 'block' : 'none';
+  document.getElementById('demo-mode-ui').style.display = m==='demo' ? 'block' : 'none';
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────────
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('nav-'+page).classList.add('active');
+}
+
+// ─── GitHub API helpers ───────────────────────────────────────────────────
+async function ghFetch(url) {
+  const headers = { 'Accept': 'application/vnd.github+json' };
+  if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+  const r = await fetch(url, { headers });
+  if (!r.ok) throw new Error(`GitHub API ${r.status}: ${r.statusText}`);
+  return r.json();
+}
+
+async function checkPath(repo, path) {
+  try {
+    const data = await ghFetch(`https://api.github.com/repos/${repo}/contents/${path}`);
+    // It's a file or directory
+    return {
+      exists: true,
+      type: Array.isArray(data) ? 'dir' : 'file',
+      url: Array.isArray(data) ? `https://github.com/${repo}/tree/main/${path}` : data.html_url,
+      sha: Array.isArray(data) ? null : data.sha,
+      size: Array.isArray(data) ? null : data.size,
+    };
+  } catch {
+    return { exists: false };
+  }
+}
+
+async function getRepoMeta(repo) {
+  return ghFetch(`https://api.github.com/repos/${repo}`);
+}
+
+async function getCommits(repo) {
+  try {
+    return ghFetch(`https://api.github.com/repos/${repo}/commits?per_page=5`);
+  } catch { return []; }
+}
+
+// ─── Real GitHub scan ─────────────────────────────────────────────────────
+async function realScan(repo, onStep) {
+  const results = [];
+
+  // Step 0: validate repo meta
+  onStep(0, `Fetching repo metadata for ${repo}…`);
+  let meta;
+  try {
+    meta = await getRepoMeta(repo);
+    state.repoData = meta;
+  } catch(e) {
+    throw new Error(`Cannot access repo "${repo}". Check the name or add a token for private repos. (${e.message})`);
+  }
+
+  // Check each domain group
+  const domainGroups = ['A','B','C','D','E','F'];
+  for (let di = 0; di < domainGroups.length; di++) {
+    const d = domainGroups[di];
+    const controls = CONTROL_MAP.filter(c=>c.domain===d);
+    onStep(di+1, `Scanning ${DOMAINS.find(x=>x.id===d).name} controls (${d})…`);
+
+    for (const ctrl of controls) {
+      let found = null;
+      for (const path of ctrl.paths) {
+        const r = await checkPath(repo, path);
+        if (r.exists) { found = { path, ...r }; break; }
+      }
+      results.push({
+        id: ctrl.id,
+        domain: ctrl.domain,
+        control: ctrl.control,
+        evidence: found ? found.path : null,
+        source: found ? `github.com/${repo}` : '—',
+        status: found ? 'ok' : 'gap',
+        url: found ? found.url : null,
+        realData: true,
+        detail: found
+          ? `Found at ${found.path} in ${repo}`
+          : `None of the expected paths exist in ${repo}`,
+        priority: ctrl.priority,
+      });
+    }
+    // small pause to avoid rate limiting
+    await sleep(100);
+  }
+
+  onStep(7, 'Computing compliance scores…');
+  await sleep(200);
+  onStep(8, 'Building evidence package…');
+  await sleep(200);
+
+  return results;
+}
+
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+// ─── Demo scan (pre-built results for STC Framework) ─────────────────────
+async function demoScan(onStep) {
+  const demoResults = [
+    { id:'A.1', domain:'A', control:'Data handling / privacy policy', evidence:'docs/data-privacy-policy.md', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/docs', realData:false, detail:'[DEMO] Data privacy policy documented in /docs.', priority:'high' },
+    { id:'A.2', domain:'A', control:'PII detection tool', evidence:'sentinel/presidio_guard.py', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/sentinel', realData:false, detail:'[DEMO] Microsoft Presidio integrated in Sentinel layer.', priority:'high' },
+    { id:'A.3', domain:'A', control:'Data retention schedule', evidence:null, source:'—', status:'gap', url:null, realData:false, detail:'[DEMO] No data retention schedule found.', priority:'high' },
+    { id:'A.4', domain:'A', control:'Third-party data sharing policy', evidence:'docs/', source:'STC Demo', status:'warn', url:null, realData:false, detail:'[DEMO] Partial — /docs exists but dedicated third-party policy not confirmed.', priority:'med' },
+    { id:'B.1', domain:'B', control:'Runtime firewall / injection defence', evidence:'sentinel/llama_firewall.py', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/sentinel', realData:false, detail:'[DEMO] LlamaFirewall — 97.5% injection detection.', priority:'high' },
+    { id:'B.2', domain:'B', control:'Auth & RBAC', evidence:'sentinel/casbin_auth.py', source:'STC Demo', status:'ok', url:null, realData:false, detail:'[DEMO] Apache Casbin — per-persona keys, JWT/IdP.', priority:'high' },
+    { id:'B.3', domain:'B', control:'Model provenance verification', evidence:'sentinel/sha256_verify.py', source:'STC Demo', status:'ok', url:null, realData:false, detail:'[DEMO] SHA-256 model verification.', priority:'med' },
+    { id:'B.4', domain:'B', control:'Secrets management', evidence:'.env.example', source:'STC Demo', status:'warn', url:'https://github.com/nitesh71078/stc-framework/blob/main/.env.example', realData:false, detail:'[DEMO] .env.example present — no vault docs found.', priority:'high' },
+    { id:'B.5', domain:'B', control:'Adversarial / pen test results', evidence:'adversarial/', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/adversarial', realData:false, detail:'[DEMO] 12 adversarial pen tests in /adversarial.', priority:'med' },
+    { id:'C.1', domain:'C', control:'Output guardrails', evidence:'critic/critic_agent.py', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/critic', realData:false, detail:'[DEMO] NeMo Guardrails + Guardrails AI in /critic.', priority:'high' },
+    { id:'C.2', domain:'C', control:'Prompt injection defence', evidence:'sentinel/', source:'STC Demo', status:'ok', url:null, realData:false, detail:'[DEMO] LlamaFirewall covers injection defence.', priority:'high' },
+    { id:'C.3', domain:'C', control:'Hallucination mitigation', evidence:'critic/critic_agent.py', source:'STC Demo', status:'warn', url:null, realData:false, detail:'[DEMO] Critic validates but no benchmark published.', priority:'med' },
+    { id:'C.4', domain:'C', control:'Incident response plan', evidence:null, source:'—', status:'gap', url:null, realData:false, detail:'[DEMO] No incident response plan found.', priority:'high' },
+    { id:'D.1', domain:'D', control:'System architecture docs', evidence:'docs/architecture/README.md', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/docs', realData:false, detail:'[DEMO] Full architecture documented.', priority:'high' },
+    { id:'D.2', domain:'D', control:'Declarative specification (YAML/config)', evidence:'spec/stc-spec.yaml', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/spec', realData:false, detail:'[DEMO] Versioned YAML spec present.', priority:'high' },
+    { id:'D.3', domain:'D', control:'SLA / uptime commitment', evidence:null, source:'—', status:'gap', url:null, realData:false, detail:'[DEMO] No SLA documented.', priority:'med' },
+    { id:'D.4', domain:'D', control:'Test suite', evidence:'reference-impl/evaluation/', source:'STC Demo', status:'ok', url:null, realData:false, detail:'[DEMO] Evaluation scripts in /reference-impl.', priority:'med' },
+    { id:'E.1', domain:'E', control:'Audit trail / trace logging', evidence:'observability/', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/observability', realData:false, detail:'[DEMO] OpenTelemetry + Arize Phoenix in /observability.', priority:'high' },
+    { id:'E.2', domain:'E', control:'Human oversight / escalation path', evidence:'critic/', source:'STC Demo', status:'ok', url:null, realData:false, detail:'[DEMO] Critic agent escalation path implemented.', priority:'high' },
+    { id:'E.3', domain:'E', control:'Model / spec versioning', evidence:'spec/stc-spec.yaml', source:'STC Demo', status:'ok', url:null, realData:false, detail:'[DEMO] Spec versioned via Git.', priority:'med' },
+    { id:'E.4', domain:'E', control:'AIUC-1 crosswalk document', evidence:'docs/aiuc-1-crosswalk/README.md', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/docs', realData:false, detail:'[DEMO] Full AIUC-1 crosswalk documented.', priority:'med' },
+    { id:'F.1', domain:'F', control:'Regulatory compliance (FINRA/NYDFS)', evidence:'regulation/', source:'STC Demo', status:'ok', url:'https://github.com/nitesh71078/stc-framework/tree/main/regulation', realData:false, detail:'[DEMO] 47/47 FINRA + NYDFS controls tested.', priority:'high' },
+    { id:'F.2', domain:'F', control:'EU AI Act alignment', evidence:'docs/aiuc-1-crosswalk/README.md', source:'STC Demo', status:'ok', url:null, realData:false, detail:'[DEMO] EU AI Act crosswalk included.', priority:'med' },
+    { id:'F.3', domain:'F', control:'Bias & fairness testing', evidence:'risk/', source:'STC Demo', status:'warn', url:'https://github.com/nitesh71078/stc-framework/tree/main/risk', realData:false, detail:'[DEMO] /risk folder present but no dedicated fairness tests found.', priority:'high' },
+    { id:'F.4', domain:'F', control:'Transparency / explainability', evidence:'docs/', source:'STC Demo', status:'warn', url:null, realData:false, detail:'[DEMO] Architecture documented but no explainability mechanism.', priority:'med' },
+  ];
+
+  const steps = ['Fetching source metadata','Scanning A · Data & Privacy','Scanning B · Security','Scanning C · Safety','Scanning D · Reliability','Scanning E · Accountability','Scanning F · Society','Computing scores','Building package'];
+  for (let i=0;i<steps.length;i++) {
+    onStep(i, steps[i]+'…'); await sleep(380);
+  }
+  return demoResults;
+}
+
+// ─── Trigger scan ─────────────────────────────────────────────────────────
+async function triggerScan() {
+  if (state.mode === 'real') {
+    state.repo = document.getElementById('repo-input').value.trim();
+    state.token = document.getElementById('token-input').value.trim();
+    state.agentName = document.getElementById('agent-name-input').value.trim() || state.repo;
+    if (!state.repo) { showToast('⚠ Enter a repo name (owner/repo)'); return; }
+  } else {
+    state.repo = 'nitesh71078/stc-framework';
+    state.agentName = 'STC Framework — AI Hub Demo';
+  }
+
+  document.getElementById('connect-error').style.display = 'none';
+
+  // Show scanner
+  const overlay = document.getElementById('scanner');
+  const bar = document.getElementById('scan-bar');
+  const stepsEl = document.getElementById('scan-steps');
+  const modeBadge = document.getElementById('scan-mode-badge');
+
+  modeBadge.className = 'scan-mode-badge ' + state.mode;
+  modeBadge.textContent = state.mode === 'real' ? '⚡ Real GitHub API — ' + state.repo : '🧪 Demo Mode — STC Framework';
+  document.getElementById('scan-anim-label').textContent = state.mode === 'real' ? 'Calling GitHub API…' : 'Loading demo data…';
+  document.getElementById('scan-sub').textContent = state.mode === 'real'
+    ? `Checking ${CONTROL_MAP.length} file paths against AIUC-1 controls…`
+    : 'Loading pre-built demo evidence for STC Framework…';
+
+  overlay.classList.add('show');
+  bar.style.width = '0%';
+
+  const totalSteps = 9;
+  stepsEl.innerHTML = '';
+
+  const onStep = (i, label) => {
+    // Mark previous done
+    const prev = document.getElementById('sstep-'+(i-1));
+    if (prev) { prev.classList.remove('active'); prev.classList.add('done'); prev.querySelector('.step-icon').textContent='✓'; }
+    // Add new step
+    const el = document.createElement('div');
+    el.className = 'scan-step active'; el.id = 'sstep-'+i;
+    el.innerHTML = `<span class="step-icon">◈</span>${label}`;
+    stepsEl.appendChild(el);
+    bar.style.width = Math.round(((i+1)/totalSteps)*100) + '%';
+  };
+
+  try {
+    let results;
+    if (state.mode === 'real') {
+      results = await realScan(state.repo, onStep);
+    } else {
+      results = await demoScan(onStep);
+    }
+
+    // Final step
+    const last = document.getElementById('sstep-'+(totalSteps-1));
+    if (last) { last.classList.remove('active'); last.classList.add('done'); last.querySelector('.step-icon').textContent='✓'; }
+    bar.style.width = '100%';
+
+    state.evidence = results;
+    state.gaps = buildGapsFromEvidence(results);
+    state.scanned = true;
+
+    await sleep(500);
+    overlay.classList.remove('show');
+    onScanDone();
+
+  } catch(err) {
+    overlay.classList.remove('show');
+    const errBox = document.getElementById('connect-error');
+    errBox.style.display = 'block';
+    errBox.className = 'error-box';
+    errBox.innerHTML = `⚠ Scan failed: ${err.message}<br><span style="color:var(--text2)">Check the repo name, or add a GitHub token if it's private.</span>`;
+    showToast('⚠ Scan failed — see error details');
+    nav('connect');
+  }
+}
+
+// ─── Build gaps from evidence ─────────────────────────────────────────────
+function buildGapsFromEvidence(ev) {
+  return ev.filter(e=>e.status==='gap'||e.status==='warn').map(e => {
+    const ctrl = CONTROL_MAP.find(c=>c.id===e.id);
+    return {
+      domain: e.domain,
+      control: e.control,
+      priority: ctrl?.priority || 'med',
+      desc: e.status === 'gap'
+        ? `No evidence found for "${e.control}" in the scanned repository. ${state.mode==='real'?'Checked paths: '+ctrl.paths.slice(0,3).join(', '):'This is a demo gap example.'}`
+        : `Partial evidence found — ${e.detail}`,
+      fix: ctrl ? suggestFix(ctrl) : 'Add documentation or implementation for this control.',
+      status: e.status,
+    };
+  });
+}
+
+function suggestFix(ctrl) {
+  const fixes = {
+    'A': `Add ${ctrl.paths[0]} with explicit policies for this control area.`,
+    'B': `Implement ${ctrl.paths[0]} or document the security control in /docs or /governance.`,
+    'C': `Add ${ctrl.paths[0]} with the safety configuration or test results.`,
+    'D': `Create ${ctrl.paths[0]} documenting this reliability requirement.`,
+    'E': `Add ${ctrl.paths[0]} or ensure logging is configured in /observability.`,
+    'F': `Create ${ctrl.paths[0]} with fairness/regulatory evidence.`,
+  };
+  return fixes[ctrl.domain] || `Add the missing artifact at ${ctrl.paths[0]}.`;
+}
+
+// ─── On scan done ─────────────────────────────────────────────────────────
+function onScanDone() {
+  const isReal = state.mode === 'real';
+  const modeBadgeHtml = isReal
+    ? `<span class="real-tag">⚡ Real GitHub Data</span>`
+    : `<span class="demo-tag">🧪 Demo Mode</span>`;
+
+  // Sidebar
+  document.getElementById('conn-dot').className = 'dot green';
+  document.getElementById('conn-label').textContent = isReal ? state.repo : 'STC Demo';
+  document.getElementById('conn-source').textContent = isReal ? 'Live GitHub API scan' : 'Pre-built demo data';
+  document.getElementById('conn-mode-badge').innerHTML = isReal
+    ? `<span class="real-tag">⚡ Real</span>`
+    : `<span class="demo-tag">🧪 Demo</span>`;
+
+  // Topbar
+  document.getElementById('btn-scan').disabled = false;
+  document.getElementById('btn-export').disabled = false;
+  document.getElementById('gap-badge').style.display = 'inline-flex';
+  document.getElementById('gap-badge').textContent = state.gaps.filter(g=>g.priority==='high'&&g.status==='gap').length;
+  document.getElementById('topbar-sub').textContent = `${state.agentName} · ${isReal?'Real GitHub scan':'Demo mode'} · just now`;
+  document.getElementById('mode-indicator').innerHTML = modeBadgeHtml;
+
+  // Mode badges on pages
+  ['dash','ev','gap'].forEach(p => {
+    const el = document.getElementById(p+'-mode-badge');
+    if (el) el.innerHTML = modeBadgeHtml;
+  });
+
+  buildDashboard(); buildEvidence(); buildGaps(); buildChecklist(); buildExport();
+  const gapCount = state.evidence.filter(e=>e.status==='gap').length;
+  showToast(`✓ Scan complete — ${state.evidence.filter(e=>e.status!=='gap').length} evidence items found, ${gapCount} gaps`);
+  nav('dashboard');
+}
+
+// ─── Score helpers ────────────────────────────────────────────────────────
+function domainScore(id) {
+  const items = state.evidence.filter(e=>e.domain===id);
+  if (!items.length) return {score:0,ok:0,warn:0,gap:0,total:0};
+  const ok = items.filter(e=>e.status==='ok').length;
+  const warn = items.filter(e=>e.status==='warn').length;
+  const gap = items.filter(e=>e.status==='gap').length;
+  return { score: Math.round(((ok+warn*0.5)/items.length)*100), ok, warn, gap, total:items.length };
+}
+function overall() {
+  const scores = DOMAINS.map(d=>domainScore(d.id).score);
+  return Math.round(scores.reduce((a,b)=>a+b,0)/DOMAINS.length);
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────
+function buildDashboard() {
+  document.getElementById('dash-agent-name').textContent = state.agentName;
+  document.getElementById('stat-score').textContent = overall()+'%';
+  const found = state.evidence.filter(e=>e.status!=='gap').length;
+  document.getElementById('stat-evidence').textContent = found;
+  document.getElementById('stat-ev-sub').textContent = state.mode==='real' ? 'Real files confirmed via GitHub API' : 'Pre-built demo evidence items';
+  document.getElementById('stat-gaps').textContent = state.evidence.filter(e=>e.status==='gap').length;
+  const now = new Date();
+  document.getElementById('stat-time').textContent = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('stat-date').textContent = now.toLocaleDateString();
+
+  document.getElementById('domains-grid').innerHTML = DOMAINS.map(d=>{
+    const s=domainScore(d.id);
+    const col=s.score>=80?'var(--success)':s.score>=55?'var(--warn)':'var(--danger)';
+    return `<div class="domain-card ${d.id}">
+      <div class="domain-letter">${d.id}</div>
+      <div class="domain-name">${d.name}</div>
+      <div class="domain-desc">${d.desc}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${s.score}%"></div></div>
+      <div class="domain-score-row"><span>${s.ok} covered · ${s.warn} partial · ${s.gap} missing</span><span style="font-weight:600;color:${col}">${s.score}%</span></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('recent-ev').innerHTML = state.evidence.slice(0,8).map(evRow).join('');
+}
+
+// ─── Evidence row renderer ────────────────────────────────────────────────
+function evRow(e) {
+  const d = DOMAINS.find(x=>x.id===e.domain);
+  const pill = e.status==='ok'?'pill-ok':e.status==='warn'?'pill-warn':'pill-gap';
+  const label = e.status==='ok'?'Found':e.status==='warn'?'Partial':'Missing';
+  const dataTag = e.realData
+    ? `<span class="real-tag" title="Verified via GitHub API">⚡</span>`
+    : `<span class="demo-tag" title="Demo data">🧪</span>`;
+  const link = e.url
+    ? `<a class="ev-link" href="${e.url}" target="_blank">Open →</a>`
+    : `<span style="color:var(--muted);font-size:10px">—</span>`;
+  return `<div class="ev-row">
+    <div><div class="ev-badge" style="background:${d.color}">${e.domain}</div></div>
+    <div><div style="display:flex;align-items:center;gap:4px">${e.control}${dataTag}</div><div class="ev-source">${e.evidence||'no artifact found'}</div></div>
+    <div class="ev-source">${e.source}</div>
+    <div><span class="status-pill ${pill}">${label}</span></div>
+    <div>${link}</div>
+  </div>`;
+}
+
+// ─── Evidence library ─────────────────────────────────────────────────────
+function buildEvidence() {
+  const ok=state.evidence.filter(e=>e.status==='ok').length;
+  const warn=state.evidence.filter(e=>e.status==='warn').length;
+  const gap=state.evidence.filter(e=>e.status==='gap').length;
+  document.getElementById('ev-count-ok').textContent = ok+' Found';
+  document.getElementById('ev-count-warn').textContent = warn+' Partial';
+  document.getElementById('ev-count-gap').textContent = gap+' Missing';
+  document.getElementById('all-ev').innerHTML = state.evidence.map(evRow).join('');
+}
+
+// ─── Gap analysis ─────────────────────────────────────────────────────────
+function buildGaps() {
+  const high = state.gaps.filter(g=>g.priority==='high'&&g.status==='gap');
+  const med = state.gaps.filter(g=>g.priority!=='high'||g.status!=='gap');
+  const gCard = g => {
+    const dObj = DOMAINS.find(x=>x.id===g.domain);
+    return `<div class="gap-card">
+      <div class="gap-card-top">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="background:${dObj.color};border-radius:3px;width:22px;height:16px;font-size:9px;font-weight:700;color:#000;display:flex;align-items:center;justify-content:center">${g.domain}</div>
+          <div class="gap-title">${g.control}</div>
+        </div>
+        <div class="gap-priority ${g.priority==='high'?'prio-high':'prio-med'}">${g.status==='gap'?'MISSING':'PARTIAL'}</div>
+      </div>
+      <div class="gap-desc">${g.desc}</div>
+      <div class="gap-fix"><span style="color:var(--text2)">Fix: </span>${g.fix}</div>
+    </div>`;
+  };
+  document.getElementById('gaps-high').innerHTML = high.length ? high.map(gCard).join('') : '<div style="color:var(--muted);font-size:11px;padding:16px">No high priority gaps — great work!</div>';
+  document.getElementById('gaps-med').innerHTML = med.length ? med.map(gCard).join('') : '<div style="color:var(--muted);font-size:11px;padding:16px">No medium priority gaps.</div>';
+  document.getElementById('gap-badge').textContent = high.length;
+}
+
+// ─── Checklist ────────────────────────────────────────────────────────────
+function buildChecklist() {
+  document.getElementById('cl-rows').innerHTML = state.evidence.map(e => {
+    const d = DOMAINS.find(x=>x.id===e.domain);
+    const pill = e.status==='ok'?'pill-ok':e.status==='warn'?'pill-warn':'pill-gap';
+    const label = e.status==='ok'?'Found':e.status==='warn'?'Partial':'Missing';
+    const chk = state.checked.has(e.id);
+    return `<div class="cl-row">
+      <div class="ctrl-id">${e.id}</div>
+      <div class="ctrl-name-wrap">
+        <div style="background:${d.color};border-radius:3px;width:20px;height:14px;font-size:8px;font-weight:700;color:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.domain}</div>
+        ${e.control}
+      </div>
+      <div><span class="status-pill ${pill}">${label}</span>${e.url?` <a class="ev-link" href="${e.url}" target="_blank" style="margin-left:6px">↗</a>`:''}</div>
+      <div><div class="ctrl-check ${chk?'checked':''}" onclick="toggleCheck('${e.id}')"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCheck(id) {
+  state.checked.has(id) ? state.checked.delete(id) : state.checked.add(id);
+  buildChecklist();
+  showToast(state.checked.has(id) ? `✓ ${id} marked verified` : `${id} unmarked`);
+}
+
+// ─── Export ───────────────────────────────────────────────────────────────
+function buildExport() {
+  const ok=state.evidence.filter(e=>e.status!=='gap').length;
+  const gap=state.evidence.filter(e=>e.status==='gap').length;
+  const isReal = state.mode === 'real';
+  document.getElementById('export-ready-chip').textContent = 'Ready to export';
+  document.getElementById('export-ready-chip').className = 'chip ok';
+  document.getElementById('export-summary').innerHTML =
+    `✦ ${state.evidence.length} controls mapped<br>✦ ${ok} evidence items found<br>✦ ${gap} gaps identified<br>✦ ${state.checked.size} controls verified<br>✦ Source: ${state.repo}<br>✦ Mode: ${isReal?'⚡ Real GitHub API':'🧪 Demo'}`;
+  document.getElementById('export-snapshot').innerHTML =
+    DOMAINS.map(d=>`✦ ${d.id} · ${d.name}: ${domainScore(d.id).score}%`).join('<br>') +
+    `<br>✦ Overall: ${overall()}%`;
+}
+
+function exportJSON() {
+  if (!state.scanned) { showToast('⚠ Run a scan first'); return; }
+  const pkg = {
+    generated: new Date().toISOString(),
+    agent: state.agentName,
+    repo: state.repo,
+    mode: state.mode,
+    overall_score: overall(),
+    note: state.mode === 'demo' ? 'DEMO MODE — evidence is illustrative, not from a real scan' : 'Real scan — evidence verified via GitHub API',
+    domains: DOMAINS.map(d=>({...d,...domainScore(d.id)})),
+    evidence: state.evidence,
+    gaps: state.gaps,
+    verified_controls: Array.from(state.checked),
+  };
+  dl('aiuc1-evidence-package.json', JSON.stringify(pkg,null,2), 'application/json');
+  showToast('✓ Evidence Package (JSON) downloaded');
+}
+
+function exportCSV() {
+  if (!state.scanned) { showToast('⚠ Run a scan first'); return; }
+  const rows = [['ID','Domain','Control','Evidence Path','Source','Status','Real Data','GitHub URL','Verified']];
+  state.evidence.forEach(e => rows.push([e.id,e.domain,e.control,e.evidence||'',e.source,e.status,e.realData?'Yes':'No (Demo)',e.url||'',state.checked.has(e.id)?'Yes':'No']));
+  dl('aiuc1-checklist.csv', rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'), 'text/csv');
+  showToast('✓ Checklist (CSV) downloaded');
+}
+
+function exportMD() {
+  if (!state.scanned) { showToast('⚠ Run a scan first'); return; }
+  const isReal = state.mode === 'real';
+  let md = `# AIUC-1 Gap Report\n**Agent:** ${state.agentName}\n**Repo:** ${state.repo}\n**Mode:** ${isReal?'Real GitHub Scan ⚡':'Demo Mode 🧪'}\n**Generated:** ${new Date().toLocaleString()}\n**Overall Score:** ${overall()}%\n`;
+  if (!isReal) md += `\n> ⚠️ This report was generated in Demo Mode. Evidence is illustrative.\n`;
+  md += `\n---\n\n## 🔴 High Priority (Missing)\n\n`;
+  state.gaps.filter(g=>g.priority==='high'&&g.status==='gap').forEach(g=>{
+    md += `### [${g.domain}] ${g.control}\n${g.desc}\n\n**Fix:** ${g.fix}\n\n`;
+  });
+  md += `## 🟡 Other Gaps & Partial Evidence\n\n`;
+  state.gaps.filter(g=>!(g.priority==='high'&&g.status==='gap')).forEach(g=>{
+    md += `### [${g.domain}] ${g.control} (${g.status})\n${g.desc}\n\n**Fix:** ${g.fix}\n\n`;
+  });
+  dl('aiuc1-gap-report.md', md, 'text/markdown');
+  showToast('✓ Gap Report (Markdown) downloaded');
+}
+
+function dl(name,content,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name; a.click();
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3800);
+}
+
+nav('connect');
+</script>
+</body>
+</html>
